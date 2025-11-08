@@ -1,59 +1,50 @@
+#define _GNU_SOURCE
 #include "main.h"
 
 /**
-* main - Main loop, recieve input from CLI parse and execute it
-* @argc: Number of arguments passed to the program
-* @argv: Array of arguments
-* Return: Exit status of last command
-*/
-int main(int argc __attribute__((unused)), char **argv)
+ * main - Simple UNIX command line interpreter
+ * @argc: number of arguments
+ * @argv: argument vector
+ * Return: Always 0
+ */
+int main(__attribute__((unused)) int argc, char *argv[])
 {
-char **arguments = NULL;    
-char *input_stdin = NULL;     
-int exit_status = 0;        
-int interactive;             
-size_t size = 0;             
-ssize_t n;                   
+	int nbr_command = 0;
+	char *line = NULL, **array_command = NULL;
+	size_t length = 0;
+	ssize_t bytes_read;
 
-while (1)
-{
-interactive = isatty(STDIN_FILENO);
-if (interactive)
-write(STDOUT_FILENO, "#(ಠ_ಠ)->$ ", 14);
+	while (1)
+	{
+		if (isatty(STDIN_FILENO))
+			printf("$ ");
 
-signal(SIGINT, sigintH);
+		bytes_read = getline(&line, &length, stdin);
+		if (bytes_read == -1)
+		{
+			if (isatty(STDIN_FILENO))
+				printf("\n");
+			break;
+		}
 
-n = getline(&input_stdin, &size, stdin);
-if (n == -1)
-{
-free(input_stdin);
-break;      
+		if (bytes_read > 1)
+			line[bytes_read - 1] = '\0';
+
+		if (strcmp(line, "exit") == 0)
+			break;
+
+		array_command = get_argument(line);
+		if (!array_command || !array_command[0])
+		{
+			free_args(array_command);
+			continue;
+		}
+
+		nbr_command++;
+		execute_command(array_command, nbr_command);
+		free_args(array_command);
+	}
+	free(line);
+	return (0);
 }
 
-if (validate_spaces(input_stdin))
-{
-free(input_stdin);
-input_stdin = NULL;
-continue;
-}
-
-arguments = hsh_tokenizer(input_stdin);
-if (arguments == NULL || arguments[0] == NULL)
-{
-free(input_stdin);
-free(arguments);
-input_stdin = NULL;
-arguments = NULL;
-continue;
-}
-
-hsh_execute_builtins(arguments, input_stdin, argv, &exit_status);
-
-free(input_stdin);
-free(arguments);
-input_stdin = NULL;
-arguments = NULL;
-}
-
-return (exit_status);
-}
