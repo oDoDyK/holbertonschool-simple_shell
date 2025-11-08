@@ -1,50 +1,24 @@
-#define _GNU_SOURCE
-#include "main.h"
+#include "simple_shell.h"
 
 /**
- * main - Simple UNIX command line interpreter
- * @argc: number of arguments
- * @argv: argument vector
- * Return: Always 0
- */
-int main(__attribute__((unused)) int argc, char *argv[])
+ * main - function
+ * @argc: int
+ * @argv: char ptr ptr
+ * @envp: char ptr ptr
+ *
+ * Return: int
+*/
+int	main(int argc, char **argv, char **envp)
 {
-	int nbr_command = 0;
-	char *line = NULL, **array_command = NULL;
-	size_t length = 0;
-	ssize_t bytes_read;
+	int	exit;
+	shell_t	*shell;
 
-	while (1)
-	{
-		if (isatty(STDIN_FILENO))
-			printf("$ ");
-
-		bytes_read = getline(&line, &length, stdin);
-		if (bytes_read == -1)
-		{
-			if (isatty(STDIN_FILENO))
-				printf("\n");
-			break;
-		}
-
-		if (bytes_read > 1)
-			line[bytes_read - 1] = '\0';
-
-		if (strcmp(line, "exit") == 0)
-			break;
-
-		array_command = get_argument(line);
-		if (!array_command || !array_command[0])
-		{
-			free_args(array_command);
-			continue;
-		}
-
-		nbr_command++;
-		execute_command(array_command, nbr_command);
-		free_args(array_command);
-	}
-	free(line);
-	return (0);
+	exit = 0;
+	shell = shell_init(0, (u8 *) argv[0], envp);
+	if (shell == 0)
+		return (0);
+	shell->exit = &exit;
+	shell_free(shell_runtime(shell));
+	(void) argc;
+	return (exit);
 }
-
