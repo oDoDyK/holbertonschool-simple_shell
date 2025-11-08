@@ -30,6 +30,7 @@ void	print_string(char *str)
  * @line: u64
  * @text: u8 ptr
 */
+
 void	print_not_found(u8 *name, u64 line, u8 *text)
 {
 	if (isatty(STDIN_FILENO) && isatty(STDOUT_FILENO))
@@ -39,8 +40,12 @@ void	print_not_found(u8 *name, u64 line, u8 *text)
 		print_string(ERRFILE);
 		return;
 	}
-	dprintf(STDERR_FILENO, "%s: %lu: %s: %s", (char *) name,
-		(unsigned long) line, (char *) text, ERRFOUND);
+
+	fprintf(stderr, "%s: %lu: %s: %s",
+		(char *)name,
+		(unsigned long)line,
+		(char *)text,
+		ERRFOUND);
 }
 
 /**
