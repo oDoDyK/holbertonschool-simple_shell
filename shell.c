@@ -1,152 +1,128 @@
-#include "main.h"
+#include "simple_shell.h"
 
 /**
- * get_argument - split command line into words (arguments)
- * @line: input line
- * Return: array of words (args)
+ * shell_new - function
+ * @s: shell_t ptr
+ * @name: u8 ptr
+ * @envp: set_t ptr
+ * @path: set_t ptr
+ *
+ * Return: shell_t ptr
  */
-char **get_argument(char *line)
+shell_t	*shell_new(shell_t *s, u8 *name, set_t *envp, set_t *path)
 {
-	int i = 0;
-	char *token;
-	char **array_command = malloc(sizeof(char *) * MAX_ARGS);
-
-	if (!array_command)
-		perror("malloc"), exit(EXIT_FAILURE);
-
-	token = strtok(line, " \t\r\n");
-	while (token)
+	s = shell_free(s);
+	s = (shell_t *) malloc(sizeof(shell_t));
+	if (s == 0)
+		return (0);
+	s->name = _strdup(name);
+	if (s->name == 0)
 	{
-		array_command[i] = malloc(strlen(token) + 1);
-		if (!array_command[i])
-			perror("malloc"), exit(EXIT_FAILURE);
-		strcpy(array_command[i], token);
-		token = strtok(NULL, " \t\r\n");
-		i++;
+		set_free(envp);
+		set_free(path);
+		return (shell_free(s));
 	}
-	array_command[i] = NULL;
-	return (array_command);
+	s->envp = set_clone(envp);
+	if (s->envp == 0)
+	{
+		set_free(envp);
+		set_free(path);
+		return (shell_free(s));
+	}
+	s->path = set_clone(path);
+	if (s->path == 0)
+	{
+		set_free(envp);
+		set_free(path);
+		return (shell_free(s));
+	}
+	set_free(envp);
+	set_free(path);
+	return (s);
 }
 
 /**
- * get_path - Find the executable in PATH
- * @line: command name
- * Return: full path if found, or NULL if not
- */
-char *get_path(char *line)
+ * shell_init_return - function
+ * @s: shell_t ptr
+ * @envp: set_t ptr
+ * @path: set_t ptr
+ *
+ * Return: shell_t ptr
+*/
+shell_t	*shell_init_return(shell_t *s, set_t *envp, set_t *path)
 {
-	char *path, *path_copy, *token, *full_path;
-	struct stat st;
-
-	if (!line)
-		return (NULL);
-
-	/* If command contains '/', check directly */
-	if (strchr(line, '/'))
-	{
-		if (access(line, X_OK) == 0)
-			return (line);
-		return (NULL);
-	}
-
-	path = _getenv("PATH");
-	if (!path || strcmp(path, "") == 0)
-		return (NULL);
-
-	path_copy = strdup(path);
-	if (!path_copy)
-		perror("strdup"), exit(EXIT_FAILURE);
-
-	token = strtok(path_copy, ":");
-	while (token)
-	{
-		full_path = malloc(strlen(token) + strlen(line) + 2);
-		if (!full_path)
-			perror("malloc"), exit(EXIT_FAILURE);
-
-		sprintf(full_path, "%s/%s", token, line);
-
-		if (access(full_path, X_OK) == 0)
-		{
-			free(path_copy);
-			return (full_path);
-		}
-		free(full_path);
-		token = strtok(NULL, ":");
-	}
-
-	free(path_copy);
-	return (NULL);
+	set_free(envp);
+	set_free(path);
+	return (s);
 }
 
 /**
- * _getenv - searches for environment variable
- * @name: variable name
- * Return: variable value or NULL
- */
-char *_getenv(const char *name)
+ * shell_init - function
+ * @s: shell_t ptr
+ * @name: u8 ptr
+ * @env: char ptr ptr
+ *
+ * Return: shell_t ptr
+*/
+shell_t	*shell_init(shell_t *s, u8 *name, char **env)
 {
-	char **env;
-	size_t len = strlen(name);
+	set_t	*envp;
+	set_t	*path;
+	u8	**v;
+	u8	*t;
+	u64	x;
 
-	if (!name || !environ)
-		return (NULL);
-
-	for (env = environ; *env != NULL; env++)
-		if (strncmp(*env, name, len) == 0 && (*env)[len] == '=')
-			return (*env + len + 1);
-	return (NULL);
+	v = 0;
+	s = shell_free(s);
+	if (env == 0)
+		return (0);
+	envp = set_new(0);
+	path = set_new(0);
+	if (envp == 0 || path == 0)
+		return (shell_init_return(s, envp, path));
+	for (x = 0; env[x]; x++)
+		envp = set_add(envp, (u8 *) env[x]);
+	if (envp == 0)
+		return (shell_init_return(s, envp, path));
+	v = set_consume(set_apply(set_filter(
+		set_clone(envp), set_filter_path), set_apply_path));
+	if (v == 0)
+		return (shell_init_return(s, envp, path));
+	if (v[0] == 0)
+	{
+		free_string_array(v);
+		return (shell_new(s, name, envp, path));
+	}
+	t = _strdup(v[0]);
+	free_string_array(v);
+	if (t == 0)
+		return (shell_init_return(s, envp, path));
+	v = _strsplit(t, (u8 *) ":");
+	free(t);
+	if (v == 0)
+		return (shell_init_return(s, envp, path));
+	for (x = 0; v[x]; x++)
+		path = set_add(path, v[x]);
+	free_string_array(v);
+	return (shell_new(s, name, envp, path));
 }
 
 /**
- * free_args - free each element of array args
- * @array_command: an array of command
- */
-void free_args(char **array_command)
+ * shell_free - function
+ * @s: shell_t ptr
+ *
+ * Return: shell_t ptr
+*/
+shell_t	*shell_free(shell_t *s)
 {
-	int i;
-
-	if (!array_command)
-		return;
-
-	for (i = 0; array_command[i]; i++)
-		free(array_command[i]);
-	free(array_command);
+	if (s == 0)
+		return (0);
+	if (s->name)
+		free(s->name);
+	if (s->envp)
+		set_free(s->envp);
+	if (s->path)
+		set_free(s->path);
+	free(s);
+	return (0);
 }
-
-/**
- * execute_command - execute a command using fork and execve
- * @array_command: array of command + args
- * @nbr_command: number of command entered
- */
-void execute_command(char **array_command, int nbr_command)
-{
-	pid_t pid;
-	char *command_path = get_path(array_command[0]);
-
-	if (command_path == NULL)
-	{
-		fprintf(stderr, "./shell: %d: %s: not found\n",
-				nbr_command, array_command[0]);
-		return;
-	}
-
-	pid = fork();
-	if (pid == -1)
-		perror("fork");
-	else if (pid == 0)
-	{
-		if (execve(command_path, array_command, environ) == -1)
-		{
-			perror("execve");
-			free_args(array_command);
-			exit(EXIT_FAILURE);
-		}
-	}
-	else
-		wait(NULL);
-
-	if (command_path != array_command[0])
-		free(command_path);
-}
-
