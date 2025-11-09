@@ -75,36 +75,25 @@ shell_t	*shell_iter_line(shell_t *s, u8 **args, u64 line)
 {
 set_t	*set;
 u8	*str;
-u8	**envp;
-u64	x;
 
 if (s == 0)
 return (0);
+
 if (args == 0)
 return (shell_free(s));
+
 if (args[0] == 0)
 return (s);
 
+/* جرّب exit builtin أولاً */
 if (shell_exit_cmd(s, args) == 0)
 return (0);
 
-if (_strlen(args[0]) == _strlen((u8 *)"env") &&
-_strcmp(args[0], (u8 *)"env") == 0)
-{
-envp = set_consume(set_clone(s->envp));
-if (envp == 0)
-return (shell_free(s));
-
-for (x = 0; envp[x]; x++)
-{
-print_string((char *)envp[x]);
-print_char('\n');
-free(envp[x]);
-}
-free(envp);
+/* حالة: exit مع رقم غير صالح -> shell_exit_cmd تصفّر args[0] */
+if (args[0] == 0)
 return (s);
-}
 
+/* من هنا وطالع: نحاول ننفّذ الأمر كـ external command */
 s->path->extra = args[0];
 set = set_filter(
 set_add(
@@ -133,10 +122,25 @@ print_not_found(s->name, line + 1, args[0]);
 }
 free(str);
 }
-
 set_free(set);
 return (s);
 }
+
+
+for (x = 0; envp[x]; x++)
+{
+print_string((char *)envp[x]);
+print_char('\n');
+free(envp[x]);
+}
+free(envp);
+return (s);
+}
+
+s->path->extra = args[0];
+set = set_filter(
+set_add(
+set_apply(set_clone(s->path), s
 
 /**
 * shell_iter - function
