@@ -19,7 +19,6 @@ print_string("\n");
 print_string(EXIT_TEXT);
 print_string("\n");
 }
-
 return (shell_free(s));
 }
 
@@ -53,47 +52,46 @@ shell_t *shell_exit_cmd(shell_t *s, u8 **args)
 {
 char *arg;
 u32 i;
+u8 status;
 
 if (s == 0 || args == 0 || args[0] == 0)
 return (s);
 
-if (_strlen(args[0]) != _strlen((u8 *)"exit"))
-return (s);
 if (_strcmp(args[0], (u8 *)"exit") != 0)
 return (s);
 
 arg = (char *)args[1];
 
 if (arg == NULL)
-return (shell_exit(s, 0));
+{
+status = 0;
+if (s->exit)
+status = *(s->exit);
+shell_free(s);
+exit(status);
+}
 
 if (arg[0] == '-')
-{
-fprintf(stderr, "%s: 1: exit: Illegal number: %s\n",
-(char *)s->name, arg);
-if (s->exit)
-*(s->exit) = 2;
-
-args[0] = 0;
-return (s);
-}
+goto illegal_number;
 
 for (i = 0; arg[i] != '\0'; i++)
 {
 if (arg[i] < '0' || arg[i] > '9')
-{
+goto illegal_number;
+}
+
+status = parse_status(arg);
+if (s->exit)
+*(s->exit) = status;
+shell_free(s);
+exit(status);
+
+illegal_number:
 fprintf(stderr, "%s: 1: exit: Illegal number: %s\n",
 (char *)s->name, arg);
 if (s->exit)
 *(s->exit) = 2;
 args[0] = 0;
 return (s);
-}
-}
-
-if (s->exit)
-*(s->exit) = parse_status(arg);
-
-return (shell_exit(s, 0));
 }
 

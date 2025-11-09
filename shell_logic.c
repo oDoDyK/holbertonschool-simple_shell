@@ -1,40 +1,44 @@
 #include "simple_shell.h"
 
 /**
-* shell_prompt - function
-* @s: shell_t ptr
+* shell_prompt - print prompt when interactive
+* @s: shell_t pointer
 *
-* Return: shell_t ptr
+* Return: shell_t pointer
 */
 shell_t *shell_prompt(shell_t *s)
 {
 if (s == 0)
 return (0);
+
 if (isatty(STDOUT_FILENO) && isatty(STDIN_FILENO))
 print_string(PROMPT_TEXT);
+
 return (s);
 }
 
 /**
 * shell_exec - execute external program
-* @s: shell_t ptr
+* @s: shell_t pointer
 * @path: executable path
-* @args: argv array
+* @args: arguments array
 *
-* Return: shell_t ptr, or NULL on fatal error
+* Return: shell_t pointer, or NULL on fatal error
 */
 shell_t *shell_exec(shell_t *s, u8 *path, u8 **args)
 {
-pid_t	pid;
-int	status;
-u8	**envp;
-u64	x;
+pid_t pid;
+int status;
+u8 **envp;
+u64 x;
 
 if (s == 0)
 return (0);
+
 envp = set_consume(set_clone(s->envp));
 if (envp == 0)
 return (0);
+
 pid = fork();
 if (pid == -1)
 {
@@ -43,6 +47,7 @@ free(envp[x]);
 free(envp);
 return (0);
 }
+
 if (pid == 0)
 {
 if (execve((char *)path, (char **)args, (char **)envp) == -1)
@@ -59,24 +64,26 @@ wait(&status);
 if (status != 0)
 *(s->exit) = 2;
 }
+
 for (x = 0; envp[x]; x++)
 free(envp[x]);
 free(envp);
+
 return (s);
 }
 
 /**
 * shell_iter_line - handle a single command line
-* @s: shell_t ptr
+* @s: shell_t pointer
 * @args: arguments array
-* @line: line number
+* @line: current line index
 *
-* Return: shell_t ptr, or NULL if shell should exit
+* Return: shell_t pointer, or NULL if shell should exit
 */
 shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 {
-set_t	*set;
-u8	*str;
+set_t *set;
+u8 *str;
 
 if (s == 0)
 return (0);
@@ -85,23 +92,18 @@ return (shell_free(s));
 if (args[0] == 0)
 return (s);
 
-/* handle "exit" builtin first */
 if (shell_exit_cmd(s, args) == 0)
 return (0);
 
-/* case: exit with illegal number -> exit_cmd cleared args[0] */
 if (args[0] == 0)
 return (s);
 
-/* from here: treat as external command */
 s->path->extra = args[0];
 set = set_filter(
 set_add(
 set_apply(set_clone(s->path), set_apply_path_exec),
-args[0]
-),
-set_filter_path_exec
-);
+args[0]),
+set_filter_path_exec);
 s->path->extra = 0;
 
 if (set == 0)
@@ -125,65 +127,78 @@ print_not_found(s->name, line + 1, args[0]);
 free(str);
 }
 set_free(set);
+
 return (s);
 }
 
 /**
-* shell_iter - main loop over commands in a line
-* @s: shell_t ptr
+* shell_iter - read one line and execute its commands
+* @s: shell_t pointer
 *
-* Return: shell_t ptr, or NULL if shell should exit
+* Return: shell_t pointer, or NULL if shell should exit
 */
 shell_t *shell_iter(shell_t *s)
 {
-u8	**l;
-u8	**a;
-u8	*i;
-u64	x;
-u64	y;
-u8	f;
+u8 **lines;
+u8 **args;
+u8 *input;
+u64 x;
+u64 y;
+u8 flag;
 
-i = read_line();
-if (i == 0)
+input = read_line();
+if (input == 0)
 return (shell_exit(s, 1));
-l = _strsplit(i, (u8 *)";\n");
-free(i);
-if (l == 0)
+
+lines = _strsplit(input, (u8 *)";\n");
+free(input);
+if (lines == 0)
 return (shell_exit(s, 1));
-f = 0;
-for (x = 0; l[x]; x++)
+
+flag = 0;
+for (x = 0; lines[x]; x++)
 {
-a = _strsplit(l[x], (u8 *)" ");
-if (a == 0)
+args = _strsplit(lines[x], (u8 *)" ");
+if (args == 0)
 continue;
-f = (shell_iter_line(s, a, x) == 0);
-for (y = 0; a[y]; y++)
-free(a[y]);
-free(a);
-if (f)
+
+flag = (shell_iter_line(s, args, x) == 0);
+
+for (y = 0; args[y]; y++)
+free(args[y]);
+free(args);
+
+if (flag)
 break;
 }
-for (x = 0; l[x]; x++)
-free(l[x]);
-free(l);
-if (f)
+
+for (x = 0; lines[x]; x++)
+free(lines[x]);
+free(lines);
+
+if (flag)
 return (0);
+
 return (s);
 }
 
 /**
-* shell_runtime - entry point loop
-* @s: shell_t ptr
+* shell_runtime - main shell loop
+* @s: shell_t pointer
 *
-* Return: shell_t ptr
+* Return: shell_t pointer
 */
 shell_t *shell_runtime(shell_t *s)
 {
 if (s == 0)
 return (0);
+
 while (1)
+{
 if (shell_iter(shell_prompt(s)) == 0)
 return (0);
+}
+
 return (shell_free(s));
 }
 
