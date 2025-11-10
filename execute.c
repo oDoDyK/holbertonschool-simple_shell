@@ -1,15 +1,32 @@
-#include <string.h>
+#include "simple_shell.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
-int hsh_execute(char **args)
+int launch_process(char **args)
 {
-    if (args[0] == NULL)
-        return 1;
+    pid_t pid;
+    int status;
 
-    if (strcmp(args[0], "exit") == 0)
-        return hsh_exit(args);
+    pid = fork();
+    if (pid == 0) // child
+    {
+        if (execvp(args[0], args) == -1)
+        {
+            perror("hsh");
+        }
+        exit(EXIT_FAILURE);
+    }
+    else if (pid < 0) // fork failed
+    {
+        perror("hsh");
+    }
+    else // parent
+    {
+        // wait for child to finish
+        waitpid(pid, &status, WUNTRACED);
+    }
 
-    // other built-ins here...
-
-    // otherwise, run external command
-    return launch_process(args);
+    return 1;
 }

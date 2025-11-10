@@ -96,6 +96,10 @@ shell_t		*shell_iter_line(shell_t *, u8 **args, u64 line);
 shell_t		*shell_iter(shell_t *);
 shell_t		*shell_runtime(shell_t *);
 
+int hsh_execute(char **args);
+int hsh_exit(char **args);
+int launch_process(char **args);
+
 # define BUFFER_SIZE (1024)
 # define EXIT_TEXT   "👋"
 # define PROMPT_TEXT "🥷 $ "
