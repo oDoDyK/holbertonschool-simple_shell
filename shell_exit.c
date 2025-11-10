@@ -1,16 +1,18 @@
 #include "simple_shell.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 /**
-* shell_exit - Cleanly exit the shell
+* shell_exit - free resources and exit the shell
 * @s: shell_t pointer
-* @nl: print newline before exit text if non-zero
+* @nl: flag to print a newline before exiting
 *
-* Return: NULL after freeing shell resources
+* Return: NULL
 */
 shell_t *shell_exit(shell_t *s, u8 nl)
 {
-if (s == 0)
-return (0);
+if (s == NULL)
+return (NULL);
 
 if (isatty(STDIN_FILENO) && isatty(STDOUT_FILENO))
 {
@@ -19,79 +21,91 @@ print_string("\n");
 print_string(EXIT_TEXT);
 print_string("\n");
 }
-return (shell_free(s));
+
+shell_free(s);
+return (NULL);
 }
 
 /**
-* parse_status - convert numeric string to exit status (0-255)
-* @arg: numeric string (digits only, already validated)
+* parse_status - parse string argument to exit status (0–255)
+* @arg: argument string (e.g. "98" or "-1")
+* @status: pointer to store resulting value
 *
-* Return: value in range 0-255
+* Return: 0 if valid number, -1 otherwise
 */
-static u8 parse_status(char *arg)
+static int parse_status(u8 *arg, int *status)
 {
-u32 value = 0;
-u32 i = 0;
+long value = 0;
+int neg = 0;
+int i = 0;
 
-while (arg[i] != '\0')
+if (arg == NULL || status == NULL)
+return (-1);
+
+if (arg[0] == '-' || arg[0] == '+')
 {
-value = (value * 10 + (arg[i] - '0')) % 256;
+if (arg[0] == '-')
+neg = 1;
 i++;
 }
-return ((u8)value);
+
+if (arg[i] == '\0')
+return (-1);
+
+for (; arg[i]; i++)
+{
+if (arg[i] < '0' || arg[i] > '9')
+return (-1);
+value = value * 10 + (arg[i] - '0');
+}
+
+if (neg)
+value = -value;
+
+value &= 0xFF;
+*status = (int)value;
+return (0);
 }
 
 /**
-* shell_exit_cmd - Handle the built-in "exit" command
+* shell_exit_cmd - handle the "exit" built-in command
 * @s: shell_t pointer
-* @args: arguments array (args[0] == "exit")
+* @args: arguments array
 *
 * Return: NULL if shell should terminate, s otherwise
 */
 shell_t *shell_exit_cmd(shell_t *s, u8 **args)
 {
-char *arg;
-u32 i;
-u8 status;
+int status = 0;
+u8 *arg;
 
-if (s == 0 || args == 0 || args[0] == 0)
+if (s == NULL || args == NULL || args[0] == NULL)
 return (s);
 
 if (_strcmp(args[0], (u8 *)"exit") != 0)
 return (s);
 
-arg = (char *)args[1];
+arg = args[1];
 
-if (arg == NULL)
+if (arg != NULL)
 {
-status = 0;
-if (s->exit)
-status = *(s->exit);
-shell_free(s);
-exit(status);
-}
-
-if (arg[0] == '-')
-goto illegal_number;
-
-for (i = 0; arg[i] != '\0'; i++)
+if (parse_status(arg, &status) != 0)
 {
-if (arg[i] < '0' || arg[i] > '9')
-goto illegal_number;
-}
-
-status = parse_status(arg);
-if (s->exit)
-*(s->exit) = status;
-shell_free(s);
-exit(status);
-
-illegal_number:
 fprintf(stderr, "%s: 1: exit: Illegal number: %s\n",
-(char *)s->name, arg);
-if (s->exit)
+(char *)s->name, (char *)arg);
+if (s->exit != NULL)
 *(s->exit) = 2;
-args[0] = 0;
+args[0] = NULL;
 return (s);
+}
+}
+else if (s->exit != NULL)
+status = *(s->exit);
+
+if (s->exit != NULL)
+*(s->exit) = status;
+
+shell_free(s);
+exit(status);
 }
 
