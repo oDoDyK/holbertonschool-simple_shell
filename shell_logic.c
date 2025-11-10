@@ -181,6 +181,8 @@ shell_t *shell_runtime(shell_t *s)
 {
 if (s == 0)
 return (0);
+
+shell_set_signal();
 while (1)
 if (shell_iter(shell_prompt(s)) == 0)
 return (0);
