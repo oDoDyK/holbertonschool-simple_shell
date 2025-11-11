@@ -113,6 +113,8 @@ shell_t		*shell_runtime(shell_t *);
 shell_t		*shell_exit_cmd(shell_t *, u8 **args);
 shell_t		*shell_setenv_cmd(shell_t *, u8 **args);
 shell_t		*shell_unsetenv_cmd(shell_t *, u8 **args);
+int _setenv(const char *name, const char *value, int overwrite);
+int _unsetenv(const char *name);
 
 /* Signal handling */
 void		sigint_handler(int sig);
