@@ -1,4 +1,6 @@
 #include "simple_shell.h"
+#include <unistd.h>
+#include <stdlib.h>
 
 /**
  * shell_prompt - function
@@ -25,16 +27,18 @@ shell_t *shell_prompt(shell_t *s)
  */
 shell_t *shell_exec(shell_t *s, u8 *path, u8 **args)
 {
-	pid_t	pid;
-	int	status;
-	u8	**envp;
-	u64	x;
+	pid_t pid;
+	int status;
+	u8 **envp;
+	u64 x;
 
 	if (s == 0)
 		return (0);
+
 	envp = set_consume(set_clone(s->envp));
 	if (envp == 0)
 		return (0);
+
 	pid = fork();
 	if (pid == -1)
 	{
@@ -43,6 +47,7 @@ shell_t *shell_exec(shell_t *s, u8 *path, u8 **args)
 		free(envp);
 		return (0);
 	}
+
 	if (pid == 0)
 	{
 		if (execve((char *)path, (char **)args, (char **)envp) == -1)
@@ -59,11 +64,14 @@ shell_t *shell_exec(shell_t *s, u8 *path, u8 **args)
 		if (status != 0)
 			*(s->exit) = 2;
 	}
+
 	for (x = 0; envp[x]; x++)
 		free(envp[x]);
 	free(envp);
 	return (s);
 }
+
+extern char **environ;
 
 /**
  * shell_iter_line - handle a single command line
@@ -73,9 +81,6 @@ shell_t *shell_exec(shell_t *s, u8 *path, u8 **args)
  *
  * Return: shell_t ptr, or NULL if shell should exit
  */
-
-extern char **environ;
-
 shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 {
 	set_t *set;
@@ -89,11 +94,11 @@ shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 	if (args[0] == 0)
 		return (s);
 
-	/* handle "exit" builtin first */
+	/* handle "exit" builtin */
 	if (shell_exit_cmd(s, args) == 0)
 		return (0);
 
-	/* env builtin */
+	/* handle "env" builtin */
 	if (_strlen(args[0]) == _strlen((u8 *)"env") &&
 	    _strcmp(args[0], (u8 *)"env") == 0)
 	{
@@ -105,17 +110,17 @@ shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 		return (s);
 	}
 
-	/* setenv builtin */
+	/* handle "setenv" builtin */
 	if (_strlen(args[0]) == _strlen((u8 *)"setenv") &&
 	    _strcmp(args[0], (u8 *)"setenv") == 0)
 		return (shell_setenv_cmd(s, args));
 
-	/* unsetenv builtin */
+	/* handle "unsetenv" builtin */
 	if (_strlen(args[0]) == _strlen((u8 *)"unsetenv") &&
 	    _strcmp(args[0], (u8 *)"unsetenv") == 0)
 		return (shell_unsetenv_cmd(s, args));
 
-	/* external command via PATH */
+	/* handle external commands via PATH */
 	s->path->extra = args[0];
 	set = set_filter(
 		set_add(
@@ -156,20 +161,21 @@ shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
  */
 shell_t *shell_iter(shell_t *s)
 {
-	u8	**l;
-	u8	**a;
-	u8	*i;
-	u64	x;
-	u64	y;
-	u8	f;
+	u8 **l;
+	u8 **a;
+	u8 *i;
+	u64 x, y;
+	u8 f;
 
 	i = read_line();
 	if (i == 0)
 		return (shell_exit(s, 1));
+
 	l = _strsplit(i, (u8 *)";\n");
 	free(i);
 	if (l == 0)
 		return (shell_exit(s, 1));
+
 	f = 0;
 	for (x = 0; l[x]; x++)
 	{
@@ -186,6 +192,7 @@ shell_t *shell_iter(shell_t *s)
 	for (x = 0; l[x]; x++)
 		free(l[x]);
 	free(l);
+
 	if (f)
 		return (0);
 	return (s);
@@ -197,7 +204,6 @@ shell_t *shell_iter(shell_t *s)
  *
  * Return: shell_t ptr
  */
-
 shell_t *shell_runtime(shell_t *s)
 {
 	if (s == 0)
@@ -208,6 +214,7 @@ shell_t *shell_runtime(shell_t *s)
 	while (1)
 		if (shell_iter(shell_prompt(s)) == 0)
 			return (0);
+
 	return (shell_free(s));
 }
 
