@@ -1,11 +1,10 @@
 #include "simple_shell.h"
 
 /**
- * validate_exit_arg - Check and parse exit argument
+ * validate_exit_arg - Check if exit argument is valid
  * @s: shell_t pointer
  * @arg: argument string
- * @status: pointer to store parsed value
- *
+ * @status: pointer to parsed status
  * Return: 1 if invalid, 0 if valid
  */
 int validate_exit_arg(shell_t *s, char *arg, int *status)
@@ -16,23 +15,29 @@ int validate_exit_arg(shell_t *s, char *arg, int *status)
 	if (!arg)
 		return (0);
 
-	/* negative number check */
+	/* Handle negative numbers */
 	if (arg[0] == '-')
 	{
-		fprintf(stderr, "%s: 1: exit: Illegal number: %s\n",
-			(char *)s->name, arg);
+		write(STDERR_FILENO, (char *)s->name, _strlen((u8 *)s->name));
+		write(STDERR_FILENO, ": 1: exit: Illegal number: ", 28);
+		write(STDERR_FILENO, arg, _strlen((u8 *)arg));
+		write(STDERR_FILENO, "\n", 1);
+
 		if (s->exit)
 			*(s->exit) = 2;
 		return (1);
 	}
 
-	/* non-digit character check */
+	/* Ensure all characters are digits */
 	for (i = 0; arg[i]; i++)
 	{
 		if (arg[i] < '0' || arg[i] > '9')
 		{
-			fprintf(stderr, "%s: 1: exit: Illegal number: %s\n",
-				(char *)s->name, arg);
+			write(STDERR_FILENO, (char *)s->name, _strlen((u8 *)s->name));
+			write(STDERR_FILENO, ": 1: exit: Illegal number: ", 28);
+			write(STDERR_FILENO, arg, _strlen((u8 *)arg));
+			write(STDERR_FILENO, "\n", 1);
+
 			if (s->exit)
 				*(s->exit) = 2;
 			return (1);
@@ -42,6 +47,7 @@ int validate_exit_arg(shell_t *s, char *arg, int *status)
 
 	if (status)
 		*status = (int)(val % 256);
+
 	return (0);
 }
 
