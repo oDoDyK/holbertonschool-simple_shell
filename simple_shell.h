@@ -125,6 +125,9 @@ int		hsh_execute(char **args);
 int		hsh_exit(char **args);
 int		launch_process(char **args);
 
+int init_env(char **envp);
+void free_env(void);
+
 /* Constants */
 # define BUFFER_SIZE (1024)
 # define EXIT_TEXT   "👋"
