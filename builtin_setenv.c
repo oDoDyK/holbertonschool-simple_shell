@@ -98,7 +98,6 @@ int _setenv(const char *name, const char *value, int overwrite)
 		}
 	}
 
-	/* variable not found, add new one */
 	{
 		size_t count = i, j;
 		char **newenv = malloc(sizeof(char *) * (count + 2));
@@ -118,11 +117,9 @@ int _setenv(const char *name, const char *value, int overwrite)
 
 		newenv[count] = nv;
 		newenv[count + 1] = NULL;
-
-		free(environ);
+		
 		environ = newenv;
 	}
 
 	return (0);
 }
-
