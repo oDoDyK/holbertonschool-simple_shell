@@ -91,8 +91,7 @@ int _setenv(const char *name, const char *value, int overwrite)
 			nv = build_nv(name, value);
 			if (!nv)
 				return (-1);
-
-			free(environ[i]);
+			
 			environ[i] = nv;
 			return (0);
 		}
@@ -117,7 +116,7 @@ int _setenv(const char *name, const char *value, int overwrite)
 
 		newenv[count] = nv;
 		newenv[count + 1] = NULL;
-		
+
 		environ = newenv;
 	}
 
