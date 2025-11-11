@@ -3,30 +3,28 @@
 #include <unistd.h>
 
 /**
-* sigint_handler - handle SIGINT (Ctrl + C)
-* @sig: signal number
-*
-* Description:
-* This function prevents the shell from exiting
-* when the user presses Ctrl + C.
-* It prints a newline and re-displays the prompt.
-*/
+ * sigint_handler - handle SIGINT (Ctrl + C)
+ * @sig: signal number
+ *
+ * Return: void
+ */
 void sigint_handler(int sig)
 {
-(void)sig;
-write(STDOUT_FILENO, "\n", 1);
-write(STDOUT_FILENO, PROMPT_TEXT, _strlen((u8 *)PROMPT_TEXT));
+	u32 len;
+
+	(void)sig;
+	write(STDOUT_FILENO, "\n", 1);
+	len = _strlen((u8 *)PROMPT_TEXT);
+	write(STDOUT_FILENO, PROMPT_TEXT, len);
 }
 
 /**
-* shell_set_signal - setup custom handler for Ctrl + C
-*
-* Description:
-* Registers sigint_handler so that SIGINT is ignored
-* and handled gracefully by reprinting the prompt.
-*/
+ * shell_set_signal - set handler for SIGINT
+ *
+ * Return: void
+ */
 void shell_set_signal(void)
 {
-signal(SIGINT, sigint_handler);
+	signal(SIGINT, sigint_handler);
 }
 

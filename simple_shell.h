@@ -100,6 +100,9 @@ int hsh_execute(char **args);
 int hsh_exit(char **args);
 int launch_process(char **args);
 
+void sigint_handler(int sig);
+void shell_set_signal(void);
+
 # define BUFFER_SIZE (1024)
 # define EXIT_TEXT   "👋"
 # define PROMPT_TEXT "🥷 $ "
