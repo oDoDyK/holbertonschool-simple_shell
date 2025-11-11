@@ -12,8 +12,6 @@ int validate_exit_arg(shell_t *s, char *arg, int *status)
 {
 	unsigned int i;
 	long val = 0;
-	char msg[1024];
-	int len;
 
 	if (!arg)
 		return (0);
@@ -21,10 +19,10 @@ int validate_exit_arg(shell_t *s, char *arg, int *status)
 	/* Handle negative numbers */
 	if (arg[0] == '-')
 	{
-		len = sprintf(msg, "%s: 1: exit: Illegal number: %s\n",
-			      (char *)s->name, arg);
-		write(STDERR_FILENO, msg, len);
-		write(STDERR_FILENO, "\n", 1); /* Ensure newline for checker */
+		write(STDERR_FILENO, (char *)s->name, _strlen((u8 *)s->name));
+		write(STDERR_FILENO, ": 1: exit: Illegal number: ", 28);
+		write(STDERR_FILENO, arg, _strlen((u8 *)arg));
+		write(STDERR_FILENO, "\n", 1); /* only ONE newline, no more */
 		if (s->exit)
 			*(s->exit) = 2;
 		return (1);
@@ -35,10 +33,10 @@ int validate_exit_arg(shell_t *s, char *arg, int *status)
 	{
 		if (arg[i] < '0' || arg[i] > '9')
 		{
-			len = sprintf(msg, "%s: 1: exit: Illegal number: %s\n",
-				      (char *)s->name, arg);
-			write(STDERR_FILENO, msg, len);
-			write(STDERR_FILENO, "\n", 1); /* Ensure newline for checker */
+			write(STDERR_FILENO, (char *)s->name, _strlen((u8 *)s->name));
+			write(STDERR_FILENO, ": 1: exit: Illegal number: ", 28);
+			write(STDERR_FILENO, arg, _strlen((u8 *)arg));
+			write(STDERR_FILENO, "\n", 1);
 			if (s->exit)
 				*(s->exit) = 2;
 			return (1);
