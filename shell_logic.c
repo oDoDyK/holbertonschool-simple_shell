@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+extern char **environ;
+
 /**
  * shell_prompt - function
  * @s: shell_t ptr
@@ -71,8 +73,6 @@ shell_t *shell_exec(shell_t *s, u8 *path, u8 **args)
 	return (s);
 }
 
-extern char **environ;
-
 /**
  * shell_iter_line - handle a single command line
  * @s: shell_t ptr
@@ -115,7 +115,7 @@ shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 	    _strcmp(args[0], (u8 *)"setenv") == 0)
 	{
 		shell_setenv_cmd(s, args);
-		return (s);  /* Always return s, never NULL for builtins */
+		return (s); /* Always return s, never NULL for builtins */
 	}
 
 	/* handle "unsetenv" builtin */
@@ -123,7 +123,15 @@ shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 	    _strcmp(args[0], (u8 *)"unsetenv") == 0)
 	{
 		shell_unsetenv_cmd(s, args);
-		return (s);  /* Always return s, never NULL for builtins */
+		return (s); /* Always return s, never NULL for builtins */
+	}
+
+	/* handle "cd" builtin */
+	if (_strlen(args[0]) == _strlen((u8 *)"cd") &&
+	    _strcmp(args[0], (u8 *)"cd") == 0)
+	{
+		shell_cd_cmd(s, args);
+		return (s);
 	}
 
 	/* handle external commands via PATH */
