@@ -1,59 +1,69 @@
 #include "simple_shell.h"
-#include <stdlib.h>
-#include <unistd.h>
+
+extern char **environ;
 
 /**
-* shell_setenv_cmd - Builtin command: setenv VARIABLE VALUE
-* @s: shell context
-* @args: command arguments
-*
-* Return: shell context
-*/
+ * shell_setenv_cmd - Implements the built-in "setenv" command
+ * @s: Pointer to shell_t structure
+ * @args: Command arguments (e.g. {"setenv", "VAR", "VALUE", NULL})
+ *
+ * Description:
+ * - If no arguments are given or too few/many, it does nothing.
+ * - If both VAR and VALUE are provided, it sets/updates the variable.
+ * - Returns the shell pointer without exiting.
+ *
+ * Return: Pointer to shell_t structure (s)
+ */
 shell_t *shell_setenv_cmd(shell_t *s, u8 **args)
 {
-if (!s || !args || !args[1] || !args[2])
-{
-write(STDERR_FILENO, "setenv: wrong number of arguments\n", 35);
-if (s && s->exit)
-*(s->exit) = 2;
-return (s);
-}
+	int argc;
 
-/* Update environment variable using the system setenv function */
-if (setenv((char *)args[1], (char *)args[2], 1) != 0)
-{
-perror("setenv");
-if (s->exit)
-*(s->exit) = 2;
-}
+	if (s == 0 || args == 0)
+		return (s);
 
-return (s);
+	for (argc = 0; args[argc]; argc++)
+		;
+
+	/* Ignore invalid usage (e.g. "setenv" or "setenv VAR" only) */
+	if (argc != 3)
+		return (s);
+
+	/* Correct usage: setenv VAR VALUE */
+	if (setenv((char *)args[1], (char *)args[2], 1) == -1)
+		return (s);
+
+	return (s);
 }
 
 /**
-* shell_unsetenv_cmd - Builtin command: unsetenv VARIABLE
-* @s: shell context
-* @args: command arguments
-*
-* Return: shell context
-*/
+ * shell_unsetenv_cmd - Implements the built-in "unsetenv" command
+ * @s: Pointer to shell_t structure
+ * @args: Command arguments (e.g. {"unsetenv", "VAR", NULL})
+ *
+ * Description:
+ * - If no variable name is given, it does nothing.
+ * - If the variable exists, it is removed.
+ * - Returns the shell pointer.
+ *
+ * Return: Pointer to shell_t structure (s)
+ */
 shell_t *shell_unsetenv_cmd(shell_t *s, u8 **args)
 {
-if (!s || !args || !args[1])
-{
-write(STDERR_FILENO, "unsetenv: wrong number of arguments\n", 37);
-if (s && s->exit)
-*(s->exit) = 2;
-return (s);
+	int argc;
+
+	if (s == 0 || args == 0)
+		return (s);
+
+	for (argc = 0; args[argc]; argc++)
+		;
+
+	/* Ignore invalid usage (e.g. "unsetenv" with no args) */
+	if (argc != 2)
+		return (s);
+
+	if (unsetenv((char *)args[1]) == -1)
+		return (s);
+
+	return (s);
 }
 
-/* Remove variable from environment */
-if (unsetenv((char *)args[1]) != 0)
-{
-perror("unsetenv");
-if (s->exit)
-*(s->exit) = 2;
-}
-
-return (s);
-}
