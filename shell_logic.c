@@ -59,13 +59,21 @@ shell_t *shell_exec(shell_t *s, u8 *path, u8 **args)
 			free(envp);
 			return (0);
 		}
-	}
-	else
-	{
-		wait(&status);
-		if (status != 0)
-			*(s->exit) = 2;
-	}
+}
+else
+{
+        wait(&status);
+
+        if (s->exit != NULL)
+        {
+                /* store real child exit status (like a normal shell) */
+                if (WIFEXITED(status))
+                        *(s->exit) = WEXITSTATUS(status);
+                else if (WIFSIGNALED(status))
+                        *(s->exit) = 128 + WTERMSIG(status);
+        }
+}
+
 
 	for (x = 0; envp[x]; x++)
 		free(envp[x]);
