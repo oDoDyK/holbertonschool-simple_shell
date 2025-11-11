@@ -73,7 +73,6 @@ return (s);
 *
 * Return: shell_t ptr, or NULL if shell should exit
 */
-
 shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 {
 set_t	*set;
@@ -86,16 +85,23 @@ return (shell_free(s));
 if (args[0] == 0)
 return (s);
 
-/* Handle "exit" builtin – may not return if it actually exits */
-shell_exit_cmd(s, args);
+/* handle "exit" builtin first */
+if (shell_exit_cmd(s, args) == 0)
+return (0);
 
-/* From here: treat as external command (ls, /bin/ls, etc.) */
+/* case: exit with illegal number -> exit_cmd cleared args[0] */
+if (args[0] == 0)
+return (s);
+
+/* from here: treat as external command */
 s->path->extra = args[0];
 set = set_filter(
 set_add(
 set_apply(set_clone(s->path), set_apply_path_exec),
-args[0]),
-set_filter_path_exec);
+args[0]
+),
+set_filter_path_exec
+);
 s->path->extra = 0;
 
 if (set == 0)
@@ -175,8 +181,6 @@ shell_t *shell_runtime(shell_t *s)
 {
 if (s == 0)
 return (0);
-
-shell_set_signal();
 while (1)
 if (shell_iter(shell_prompt(s)) == 0)
 return (0);
