@@ -91,12 +91,13 @@ int _setenv(const char *name, const char *value, int overwrite)
 			nv = build_nv(name, value);
 			if (!nv)
 				return (-1);
-			
-			environ[i] = nv;
+
+			environ[i] = nv; /* Replace directly without freeing old value */
 			return (0);
 		}
 	}
 
+	/* Variable not found, add new one */
 	{
 		size_t count = i, j;
 		char **newenv = malloc(sizeof(char *) * (count + 2));
@@ -122,3 +123,4 @@ int _setenv(const char *name, const char *value, int overwrite)
 
 	return (0);
 }
+
