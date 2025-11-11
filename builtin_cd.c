@@ -33,19 +33,20 @@ shell_t *shell_cd_cmd(shell_t *s, u8 **args)
 
 	/* case 2: cd - -> go OLDPWD */
 	else if (_strcmp(args[1], (u8 *)"-") == 0)
+{
+	target = _getenv("OLDPWD");
+	if (target)
 	{
-		target = _getenv("OLDPWD");
-		if (target)
-		{
-			print_string(target);
-			print_char('\n');
-		}
-		else
-		{
-			fprintf(stderr, "cd: OLDPWD not set\n");
-			return (s);
-		}
+		print_string(target);
+		print_char('\n');
 	}
+	else
+	{
+		/* silently ignore if OLDPWD is missing */
+		return (s);
+	}
+}
+
 	/* case 3: cd <path> */
 	else
 		target = (char *)args[1];
