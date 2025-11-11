@@ -10,6 +10,8 @@
 # include <errno.h>
 # include <signal.h>
 
+extern char **environ;
+
 # define i8  int8_t
 # define u8  uint8_t
 # define i32 int32_t
