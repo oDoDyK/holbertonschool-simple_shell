@@ -113,12 +113,18 @@ shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 	/* handle "setenv" builtin */
 	if (_strlen(args[0]) == _strlen((u8 *)"setenv") &&
 	    _strcmp(args[0], (u8 *)"setenv") == 0)
-		return (shell_setenv_cmd(s, args));
+	{
+		shell_setenv_cmd(s, args);
+		return (s);  /* Always return s, never NULL for builtins */
+	}
 
 	/* handle "unsetenv" builtin */
 	if (_strlen(args[0]) == _strlen((u8 *)"unsetenv") &&
 	    _strcmp(args[0], (u8 *)"unsetenv") == 0)
-		return (shell_unsetenv_cmd(s, args));
+	{
+		shell_unsetenv_cmd(s, args);
+		return (s);  /* Always return s, never NULL for builtins */
+	}
 
 	/* handle external commands via PATH */
 	s->path->extra = args[0];

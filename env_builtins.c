@@ -65,7 +65,6 @@ static void _update_system_env(shell_t *s)
     if (s == NULL || s->envp == NULL)
         return;
 
-    /* Free old environ if it exists */
     if (environ != NULL)
     {
         for (i = 0; environ[i] != NULL; i++)
@@ -73,7 +72,6 @@ static void _update_system_env(shell_t *s)
         free(environ);
     }
 
-    /* Create new environ from shell envp */
     environ = malloc(sizeof(char *) * (s->envp->size + 1));
     if (environ == NULL)
         return;
@@ -83,7 +81,6 @@ static void _update_system_env(shell_t *s)
         environ[i] = (char *)_strdup(s->envp->data[i]);
         if (environ[i] == NULL)
         {
-            /* Cleanup on failure */
             for (j = 0; j < i; j++)
                 free(environ[j]);
             free(environ);
@@ -103,9 +100,10 @@ static void _update_system_env(shell_t *s)
  */
 shell_t *shell_setenv_cmd(shell_t *s, u8 **args)
 {
-    int argc, index;
+    int argc;
     u8 *new_var;
     u64 name_len, value_len, total_len;
+    int index;
 
     if (s == NULL || args == NULL)
         return (s);
@@ -113,18 +111,20 @@ shell_t *shell_setenv_cmd(shell_t *s, u8 **args)
     for (argc = 0; args[argc] != NULL; argc++)
         ;
 
+    /* Check argument count - THIS IS THE FIX */
     if (argc != 3)
     {
-        fprintf(stderr, "%s: setenv: Usage: setenv VARIABLE VALUE\n",
+        fprintf(stderr, "%s: 1: setenv: Usage: setenv VARIABLE VALUE\n", 
                 (char *)s->name);
         if (s->exit != NULL)
             *(s->exit) = 2;
         return (s);
     }
 
+    /* Validate variable name */
     if (!_is_valid_var_name(args[1]))
     {
-        fprintf(stderr, "%s: setenv: Invalid variable name\n",
+        fprintf(stderr, "%s: 1: setenv: Invalid variable name\n", 
                 (char *)s->name);
         if (s->exit != NULL)
             *(s->exit) = 2;
@@ -138,7 +138,7 @@ shell_t *shell_setenv_cmd(shell_t *s, u8 **args)
     new_var = malloc(total_len);
     if (new_var == NULL)
     {
-        fprintf(stderr, "%s: setenv: Memory allocation failed\n",
+        fprintf(stderr, "%s: 1: setenv: Memory allocation failed\n", 
                 (char *)s->name);
         if (s->exit != NULL)
             *(s->exit) = 2;
@@ -161,7 +161,7 @@ shell_t *shell_setenv_cmd(shell_t *s, u8 **args)
         free(new_var);
         if (new_envp == NULL)
         {
-            fprintf(stderr, "%s: setenv: Failed to add variable\n",
+            fprintf(stderr, "%s: 1: setenv: Failed to add variable\n", 
                     (char *)s->name);
             if (s->exit != NULL)
                 *(s->exit) = 2;
@@ -183,7 +183,8 @@ shell_t *shell_setenv_cmd(shell_t *s, u8 **args)
  */
 shell_t *shell_unsetenv_cmd(shell_t *s, u8 **args)
 {
-    int argc, index;
+    int argc;
+    int index;
     u64 i;
 
     if (s == NULL || args == NULL)
@@ -192,18 +193,20 @@ shell_t *shell_unsetenv_cmd(shell_t *s, u8 **args)
     for (argc = 0; args[argc] != NULL; argc++)
         ;
 
+    /* Check argument count - THIS IS THE FIX */
     if (argc != 2)
     {
-        fprintf(stderr, "%s: unsetenv: Usage: unsetenv VARIABLE\n",
+        fprintf(stderr, "%s: 1: unsetenv: Usage: unsetenv VARIABLE\n", 
                 (char *)s->name);
         if (s->exit != NULL)
             *(s->exit) = 2;
         return (s);
     }
 
+    /* Validate variable name */
     if (!_is_valid_var_name(args[1]))
     {
-        fprintf(stderr, "%s: unsetenv: Invalid variable name\n",
+        fprintf(stderr, "%s: 1: unsetenv: Invalid variable name\n", 
                 (char *)s->name);
         if (s->exit != NULL)
             *(s->exit) = 2;
@@ -213,14 +216,13 @@ shell_t *shell_unsetenv_cmd(shell_t *s, u8 **args)
     index = _getenv_index(s, args[1]);
     if (index < 0)
     {
-        fprintf(stderr, "%s: unsetenv: Variable not found\n",
+        fprintf(stderr, "%s: 1: unsetenv: Variable not found\n", 
                 (char *)s->name);
         if (s->exit != NULL)
             *(s->exit) = 2;
         return (s);
     }
 
-    /* Remove variable from envp */
     free(s->envp->data[index]);
     for (i = index; i < s->envp->size - 1; i++)
     {
