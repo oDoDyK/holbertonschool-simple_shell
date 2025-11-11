@@ -74,12 +74,13 @@ shell_t *shell_exec(shell_t *s, u8 *path, u8 **args)
  * Return: shell_t ptr, or NULL if shell should exit
  */
 
-shell_t	*shell_iter_line(shell_t *s, u8 **args, u64 line)
+extern char **environ;
+
+shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 {
-	set_t	*set;
-	u8	*str;
-	u8	**envp;
-	u64	x;
+	set_t *set;
+	u8 *str;
+	u64 x;
 
 	if (s == 0)
 		return (0);
@@ -92,40 +93,35 @@ shell_t	*shell_iter_line(shell_t *s, u8 **args, u64 line)
 	if (shell_exit_cmd(s, args) == 0)
 		return (0);
 
-	/* builtin: env */
-	if (_strlen(args[0]) == _strlen((u8 *) "env") &&
-		_strcmp(args[0], (u8 *) "env") == 0)
+	/* env builtin */
+	if (_strlen(args[0]) == _strlen((u8 *)"env") &&
+	    _strcmp(args[0], (u8 *)"env") == 0)
 	{
-		envp = set_consume(set_clone(s->envp));
-		if (envp == 0)
-			return (shell_free(s));
-		for (x = 0; envp[x]; x++)
+		for (x = 0; environ[x]; x++)
 		{
-			print_string((char *) envp[x]);
+			print_string(environ[x]);
 			print_char('\n');
-			free(envp[x]);
 		}
-		free(envp);
 		return (s);
 	}
 
-	/* builtin: setenv */
-	if (_strlen(args[0]) == _strlen((u8 *) "setenv") &&
-		_strcmp(args[0], (u8 *) "setenv") == 0)
+	/* setenv builtin */
+	if (_strlen(args[0]) == _strlen((u8 *)"setenv") &&
+	    _strcmp(args[0], (u8 *)"setenv") == 0)
 		return (shell_setenv_cmd(s, args));
 
-	/* builtin: unsetenv */
-	if (_strlen(args[0]) == _strlen((u8 *) "unsetenv") &&
-		_strcmp(args[0], (u8 *) "unsetenv") == 0)
+	/* unsetenv builtin */
+	if (_strlen(args[0]) == _strlen((u8 *)"unsetenv") &&
+	    _strcmp(args[0], (u8 *)"unsetenv") == 0)
 		return (shell_unsetenv_cmd(s, args));
 
-	/* from here: treat as external command */
+	/* external command via PATH */
 	s->path->extra = args[0];
 	set = set_filter(
-			set_add(
-				set_apply(set_clone(s->path), set_apply_path_exec),
-				args[0]),
-			set_filter_path_exec);
+		set_add(
+			set_apply(set_clone(s->path), set_apply_path_exec),
+			args[0]),
+		set_filter_path_exec);
 	s->path->extra = 0;
 
 	if (set == 0)
