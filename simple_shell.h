@@ -127,6 +127,7 @@ int		launch_process(char **args);
 
 int init_env(char **envp);
 void free_env(void);
+int validate_exit_arg(shell_t *s, char *arg, int *status);
 
 /* Constants */
 # define BUFFER_SIZE (1024)

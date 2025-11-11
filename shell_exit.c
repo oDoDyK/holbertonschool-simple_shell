@@ -22,48 +22,6 @@ shell_t *shell_exit(shell_t *s, u8 nl)
 	return (shell_free(s));
 }
 
-/**
- * validate_exit_arg - Check if exit argument is valid
- * @s: shell_t pointer
- * @arg: argument string
- * @status: pointer to parsed value
- * Return: 1 if invalid, 0 if valid
- */
-static int validate_exit_arg(shell_t *s, char *arg, int *status)
-{
-	unsigned int i;
-	long val = 0;
-
-	if (!arg)
-		return (0);
-
-	/* handle negative */
-	if (arg[0] == '-')
-	{
-		fprintf(stderr, "%s: 1: exit: Illegal number: %s\n",
-			(char *)s->name, arg);
-		if (s->exit)
-			*(s->exit) = 2;
-		return (1);
-	}
-
-	for (i = 0; arg[i]; i++)
-	{
-		if (arg[i] < '0' || arg[i] > '9')
-		{
-			fprintf(stderr, "%s: 1: exit: Illegal number: %s\n",
-				(char *)s->name, arg);
-			if (s->exit)
-				*(s->exit) = 2;
-			return (1);
-		}
-		val = (val * 10 + (arg[i] - '0')) % 256;
-	}
-
-	if (status)
-		*status = (int)(val % 256);
-	return (0);
-}
 
 /**
  * shell_exit_cmd - Handle the built-in "exit" command
