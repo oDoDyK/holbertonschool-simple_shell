@@ -31,8 +31,7 @@ shell_t *shell_exit(shell_t *s, u8 nl)
  */
 static u8 parse_status(char *arg)
 {
-	u32 value = 0;
-	u32 i = 0;
+	u32 value = 0, i = 0;
 
 	while (arg[i] != '\0')
 	{
@@ -57,31 +56,28 @@ shell_t *shell_exit_cmd(shell_t *s, u8 **args)
 	if (s == 0 || args == 0 || args[0] == 0)
 		return (s);
 
-	/* Not the "exit" command */
-	if (_strlen(args[0]) != _strlen((u8 *)"exit"))
-		return (s);
+	/* Ensure it's the "exit" command */
 	if (_strcmp(args[0], (u8 *)"exit") != 0)
 		return (s);
 
 	arg = (char *)args[1];
 
-	/* No argument: exit with current status */
+	/* No argument → exit with current status */
 	if (arg == NULL)
 		return (shell_exit(s, 0));
 
-	/* Negative numbers are considered illegal */
+	/* Check for negative numbers */
 	if (arg[0] == '-')
 	{
 		fprintf(stderr, "%s: 1: exit: Illegal number: %s\n",
 			(char *)s->name, arg);
 		if (s->exit)
 			*(s->exit) = 2;
-		/* command اتنفّذ كبِلت إن → لا تنفّذه كـ external */
-		args[0] = 0;
+		args[0] = NULL;
 		return (s);
 	}
 
-	/* Ensure all characters are digits */
+	/* Check that all chars are digits (reject strings) */
 	for (i = 0; arg[i] != '\0'; i++)
 	{
 		if (arg[i] < '0' || arg[i] > '9')
@@ -90,12 +86,12 @@ shell_t *shell_exit_cmd(shell_t *s, u8 **args)
 				(char *)s->name, arg);
 			if (s->exit)
 				*(s->exit) = 2;
-			args[0] = 0;
+			args[0] = NULL;
 			return (s);
 		}
 	}
 
-	/* Valid positive integer: compute normalized status (mod 256) */
+	/* Valid number → exit normally */
 	if (s->exit)
 		*(s->exit) = parse_status(arg);
 
