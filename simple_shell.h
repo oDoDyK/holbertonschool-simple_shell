@@ -129,6 +129,7 @@ int init_env(char **envp);
 void free_env(void);
 int validate_exit_arg(shell_t *s, char *arg, int *status);
 shell_t *shell_cd_cmd(shell_t *s, u8 **args);
+char *_getenv(const char *name);
 
 /* Constants */
 # define BUFFER_SIZE (1024)

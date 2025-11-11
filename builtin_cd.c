@@ -29,12 +29,12 @@ shell_t *shell_cd_cmd(shell_t *s, u8 **args)
 
 	/* case 1: cd with no argument -> go HOME */
 	if (args[1] == NULL)
-		target = getenv("HOME");
+		target = _getenv("HOME");
 
 	/* case 2: cd - -> go OLDPWD */
 	else if (_strcmp(args[1], (u8 *)"-") == 0)
 	{
-		target = getenv("OLDPWD");
+		target = _getenv("OLDPWD");
 		if (target)
 		{
 			print_string(target);
