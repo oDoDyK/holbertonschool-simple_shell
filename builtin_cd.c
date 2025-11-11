@@ -61,7 +61,7 @@ shell_t *shell_cd_cmd(shell_t *s, u8 **args)
 	rc = chdir(target);
 	if (rc == -1)
 	{
-		fprintf(stderr, "cd: can't cd to %s\n", target);
+		fprintf(stderr, "%s: 1: cd: can't cd to %s\n", s->name, target);
 		return (s);
 	}
 
