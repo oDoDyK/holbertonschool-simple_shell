@@ -22,14 +22,15 @@ int validate_exit_arg(shell_t *s, char *arg, int *status)
 		write(STDERR_FILENO, (char *)s->name, _strlen((u8 *)s->name));
 		write(STDERR_FILENO, ": 1: exit: Illegal number: ", 28);
 		write(STDERR_FILENO, arg, _strlen((u8 *)arg));
-		write(STDERR_FILENO, "\n", 1); /* only ONE newline, no more */
+		/* ✅ no newline here, just exact single one below */
+		write(STDERR_FILENO, "\n", 1);
 		if (s->exit)
 			*(s->exit) = 2;
 		return (1);
 	}
 
-	/* Ensure all characters are digits */
-	for (i = 0; arg[i] != '\0'; i++)
+	/* Validate digits */
+	for (i = 0; arg[i]; i++)
 	{
 		if (arg[i] < '0' || arg[i] > '9')
 		{
