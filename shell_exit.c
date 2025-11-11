@@ -53,7 +53,7 @@ shell_t *shell_exit_cmd(shell_t *s, u8 **args)
 	char *arg;
 	u32 i;
 
-	if (s == 0 || args == 0 || args[0] == 0)
+	if (!s || !args || !args[0])
 		return (s);
 
 	/* Ensure it's the "exit" command */
@@ -62,22 +62,26 @@ shell_t *shell_exit_cmd(shell_t *s, u8 **args)
 
 	arg = (char *)args[1];
 
-	/* No argument → exit with current status */
+	/* No argument → exit normally */
 	if (arg == NULL)
 		return (shell_exit(s, 0));
 
-	/* Check for negative numbers */
-	if (arg[0] == '-')
+	/* Check for negative or invalid input */
+	if (arg[0] == '-' || arg[0] == '+')
 	{
 		fprintf(stderr, "%s: 1: exit: Illegal number: %s\n",
 			(char *)s->name, arg);
 		if (s->exit)
 			*(s->exit) = 2;
 		args[0] = NULL;
+		/* Free temporarily allocated memory */
+		if (s->line)
+			free(s->line), s->line = NULL;
+		if (s->args)
+			free(s->args), s->args = NULL;
 		return (s);
 	}
 
-	/* Check that all chars are digits (reject strings) */
 	for (i = 0; arg[i] != '\0'; i++)
 	{
 		if (arg[i] < '0' || arg[i] > '9')
@@ -87,11 +91,14 @@ shell_t *shell_exit_cmd(shell_t *s, u8 **args)
 			if (s->exit)
 				*(s->exit) = 2;
 			args[0] = NULL;
+			if (s->line)
+				free(s->line), s->line = NULL;
+			if (s->args)
+				free(s->args), s->args = NULL;
 			return (s);
 		}
 	}
 
-	/* Valid number → exit normally */
 	if (s->exit)
 		*(s->exit) = parse_status(arg);
 
