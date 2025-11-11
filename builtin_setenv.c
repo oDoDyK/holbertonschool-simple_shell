@@ -92,7 +92,9 @@ int _setenv(const char *name, const char *value, int overwrite)
 			if (!nv)
 				return (-1);
 
-			environ[i] = nv; /* Replace directly without freeing old value */
+			/* Free old variable before replacing to prevent leaks */
+			free(environ[i]);
+			environ[i] = nv;
 			return (0);
 		}
 	}
@@ -118,6 +120,8 @@ int _setenv(const char *name, const char *value, int overwrite)
 		newenv[count] = nv;
 		newenv[count + 1] = NULL;
 
+		/* Replace old environ array only (not its contents) */
+		free(environ);
 		environ = newenv;
 	}
 
