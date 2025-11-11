@@ -23,22 +23,21 @@ shell_t *shell_exit(shell_t *s, u8 nl)
 }
 
 /**
- * check_exit_argument - validate and parse exit argument
+ * validate_exit_arg - Check if exit argument is valid
  * @s: shell_t pointer
- * @arg: argument string to check
- * @status: pointer to store parsed value if valid
- *
+ * @arg: argument string
+ * @status: pointer to parsed value
  * Return: 1 if invalid, 0 if valid
  */
-static int check_exit_argument(shell_t *s, char *arg, int *status)
+static int validate_exit_arg(shell_t *s, char *arg, int *status)
 {
 	unsigned int i;
 	long val = 0;
 
-	if (arg == NULL)
+	if (!arg)
 		return (0);
 
-	/* check for negative sign */
+	/* handle negative */
 	if (arg[0] == '-')
 	{
 		fprintf(stderr, "%s: 1: exit: Illegal number: %s\n",
@@ -48,7 +47,6 @@ static int check_exit_argument(shell_t *s, char *arg, int *status)
 		return (1);
 	}
 
-	/* ensure all characters are digits */
 	for (i = 0; arg[i]; i++)
 	{
 		if (arg[i] < '0' || arg[i] > '9')
@@ -64,7 +62,6 @@ static int check_exit_argument(shell_t *s, char *arg, int *status)
 
 	if (status)
 		*status = (int)(val % 256);
-
 	return (0);
 }
 
@@ -89,11 +86,11 @@ shell_t *shell_exit_cmd(shell_t *s, u8 **args)
 	if (!args[1])
 		return (shell_exit(s, 0));
 
-	/* Check argument validity */
-	if (check_exit_argument(s, (char *)args[1], &status))
+	/* Invalid argument (string or negative) */
+	if (validate_exit_arg(s, (char *)args[1], &status))
 	{
 		args[0] = NULL;
-		return (s);
+		return (s); /* Don't exit shell, just continue */
 	}
 
 	/* Valid numeric argument */
