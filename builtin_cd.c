@@ -37,16 +37,21 @@ shell_t *shell_cd_cmd(shell_t *s, u8 **args)
 	target = _getenv("OLDPWD");
 	if (target)
 	{
+ 
 		print_string(target);
 		print_char('\n');
 	}
 	else
 	{
-		/* silently ignore if OLDPWD is missing */
+ 
+		if (cwd[0] != '\0')
+		{
+			print_string(cwd);
+			print_char('\n');
+		}
 		return (s);
 	}
 }
-
 	/* case 3: cd <path> */
 	else
 		target = (char *)args[1];
