@@ -17,21 +17,6 @@ and the inner workings of a command-line environment.
 - 💡 Reflection    
 
 ---
-## ⚙️ Description
-
-This project is part of the *Holberton School Low-Level Programming curriculum*,  
-and focuses on building a simple command-line interpreter.
-
-It replicates the core features of a Unix shell:
-- Displaying a prompt and waiting for user input  
-- ⁠Executing commands found in the system ⁠ *PATH* ⁠  
-- Managing built-in commands like ⁠ cd ⁠, ⁠ exit ⁠, ⁠ env ⁠, ⁠ setenv ⁠, and ⁠ unsetenv ⁠  
-- ⁠Handling command chaining `(⁠ ; ⁠)`, logical operators `(⁠ && ⁠, ⁠ || ⁠)`.  
-
-The project deepens understanding of *process creation, system calls, memory management*,  
-and overall *shell behavior* from the inside.
-
----
 
 ## 🧠 Learning Objectives
 
