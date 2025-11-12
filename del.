@@ -2,4 +2,5 @@
 rm 1
 git add .
 git commit -m "deleted func"
+git pull
 git push

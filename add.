@@ -2,4 +2,5 @@
 touch 1
  git add 1
   git commit -m "added a func"
-git push 
+git pull
+  git push 
