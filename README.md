@@ -1,4 +1,4 @@
-# 🥷 C - Simple Shell
+# ⭐️ C - Simple Shell
 The Simple Shell project is a basic implementation of a UNIX command interpreter written in C.
 It aims to mimic the behavior of the standard shell by handling user commands, executing programs,
 and supporting built-in functions such as `cd`, `exit`, `env`, `setenv`, and `unsetenv`.
