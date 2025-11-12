@@ -1,0 +1,206 @@
+.TH SIMPLE_SHELL 1 "November 2025" "Holberton School" "User Commands"
+.SH NAME
+.B simple_shell
+\- A lightweight command-line interpreter written in C.
+
+.SH SYNOPSIS
+.B simple_shell
+.RI [COMMAND] " [ARGUMENTS]..."
+.br
+.B ./hsh
+.RI [COMMAND] " [OPTIONS]..."
+
+.SH DESCRIPTION
+The
+.B simple_shell
+project is a simplified UNIX command-line interpreter that mimics the behavior
+of the Bourne Shell (sh).  
+It allows users to interact directly with the operating system through command execution, built-in functions, and process management.
+
+Developed as part of the Holberton School low-level programming curriculum, this project deepens understanding of key UNIX concepts:
+process creation, system calls, environment management, memory allocation, and signal handling.
+
+The shell executes user commands either from standard input (interactive mode) or from a file (non-interactive mode), creating child processes when necessary and supporting core UNIX functionalities.
+
+.SH FEATURES
+The shell supports the following core features:
+.TP
+• Displaying a custom interactive prompt ("🥷 $") when waiting for input.
+.TP
+• Executing system commands located in directories defined by the PATH environment variable.
+.TP
+• Managing built-in commands such as
+.B cd,
+.B env,
+.B setenv,
+.B unsetenv,
+and
+.B exit.
+.TP
+• Handling command chaining using the
+.B ;
+operator.
+.TP
+• Supporting logical operators:
+.B &&
+(for AND)
+and
+.B ||
+(for OR),
+executing commands conditionally based on previous success or failure.
+.TP
+• Implementing a simple
+.B alias
+system that maps shortcut names to longer commands.
+.TP
+• Handling user interruptions such as Ctrl+C gracefully, without exiting abruptly.
+.TP
+• Returning appropriate exit status codes after each command execution.
+.TP
+• Preventing memory leaks by managing all dynamically allocated resources safely.
+
+.SH BUILT-IN COMMANDS
+The following built-in commands are implemented directly in the shell:
+
+.TP
+.B cd [directory]
+Change the current working directory.
+If no directory is specified, changes to the user's home directory.
+
+.TP
+.B exit [status]
+Exit the shell.
+Optionally, a numeric status code can be provided to specify the exit value.
+
+.TP
+.B env
+Display the current environment variables.
+
+.TP
+.B setenv VARIABLE VALUE
+Set or update an environment variable.
+If the variable already exists, its value is replaced.
+
+.TP
+.B unsetenv VARIABLE
+Remove an environment variable.
+
+.TP
+.B alias [name[='value'] ...]
+Define or display command aliases.
+Typing "alias" without arguments prints the list of defined aliases.
+
+.SH OPERATORS
+The shell supports command operators for combining commands logically.
+
+.TP
+.B ;
+Sequential command separator.
+All commands separated by ';' are executed in order.
+
+.TP
+.B &&
+Logical AND operator.
+The command following '&&' executes only if the previous command succeeds.
+
+.TP
+.B ||
+Logical OR operator.
+The command following '||' executes only if the previous command fails.
+
+.SH USAGE EXAMPLES
+.TP
+.B Example 1: Interactive mode
+.RS
+.nf
+$ ./hsh
+🥷 $ ls
+builtin_cd.c  io.c  main.c  shell_logic.c
+🥷 $ exit
+👋
+.fi
+.RE
+
+.TP
+.B Example 2: Command chaining
+.RS
+.nf
+🥷 $ ls ; pwd ; echo "Done"
+.fi
+.RE
+
+.TP
+.B Example 3: Logical operators
+.RS
+.nf
+🥷 $ mkdir test && cd test
+🥷 $ cd /root || echo "Access denied"
+.fi
+.RE
+
+.TP
+.B Example 4: Using aliases
+.RS
+.nf
+🥷 $ alias list='ls -l'
+🥷 $ list
+.fi
+.RE
+
+.SH FILES
+The following files are part of the
+.B simple_shell
+project:
+
+.TP
+.B main.c
+Entry point of the shell; initializes environment and command loop.
+
+.TP
+.B shell_logic.c
+Contains the main logic for parsing, executing, and managing commands.
+
+.TP
+.B io.c
+Handles input/output functions and prompt display.
+
+.TP
+.B builtin_cd.c
+Implements the "cd" built-in command.
+
+.TP
+.B env_builtins.c
+Implements the "env", "setenv", and "unsetenv" built-ins.
+
+.TP
+.B builtin_alias.c
+Implements the "alias" command for managing custom shortcuts.
+
+.TP
+.B shell_exit.c
+Implements the "exit" built-in command.
+
+.TP
+.B signal_handler.c
+Handles terminal signals like SIGINT (Ctrl+C) gracefully.
+
+.TP
+.B memory.c, vector.c
+Utility files for dynamic memory management and buffer handling.
+
+.TP
+.B simple_shell.h
+Header file containing function prototypes, data structures, and macros.
+
+.SH EXIT STATUS
+The shell exits with the status code of the last executed command.
+If an error occurs, a non-zero value is returned.
+
+.SH AUTHORS
+Nada Ghannam Al-Mutairi <Nada.ghannam19@gmail.com>
+.br
+Mohammed Abdulrahman Basuliman <4thkiller2005@gmail.com>
+
+.SH COPYRIGHT
+This project is part of the Holberton School.
+Use for educational and learning purposes only.
