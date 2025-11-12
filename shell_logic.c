@@ -89,6 +89,7 @@ else
  *
  * Return: shell_t ptr, or NULL if shell should exit
  */
+
 shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 {
 	set_t *set;
@@ -102,11 +103,11 @@ shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 	if (args[0] == 0)
 		return (s);
 
-	/* handle "exit" builtin */
+	/* Handle "exit" builtin */
 	if (shell_exit_cmd(s, args) == 0)
 		return (0);
 
-	/* handle "env" builtin */
+	/* Handle "env" builtin */
 	if (_strlen(args[0]) == _strlen((u8 *)"env") &&
 	    _strcmp(args[0], (u8 *)"env") == 0)
 	{
@@ -118,31 +119,57 @@ shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
 		return (s);
 	}
 
-	/* handle "setenv" builtin */
+	/* Handle "setenv" builtin */
 	if (_strlen(args[0]) == _strlen((u8 *)"setenv") &&
 	    _strcmp(args[0], (u8 *)"setenv") == 0)
 	{
 		shell_setenv_cmd(s, args);
-		return (s); /* Always return s, never NULL for builtins */
+		return (s);
 	}
 
-	/* handle "unsetenv" builtin */
+	/* Handle "unsetenv" builtin */
 	if (_strlen(args[0]) == _strlen((u8 *)"unsetenv") &&
 	    _strcmp(args[0], (u8 *)"unsetenv") == 0)
 	{
 		shell_unsetenv_cmd(s, args);
-		return (s); /* Always return s, never NULL for builtins */
-	}
-
-	/* handle "cd" builtin */
-	if (_strlen(args[0]) == _strlen((u8 *)"cd") &&
-	    _strcmp(args[0], (u8 *)"cd") == 0)
-	{
-		shell_cd_cmd(s, args);
 		return (s);
 	}
 
-	/* handle external commands via PATH */
+	/* 🧩 Handle logical operators "&&" and "||" */
+	for (x = 0; args[x]; x++)
+	{
+		if (_strcmp(args[x], (u8 *)"&&") == 0 || _strcmp(args[x], (u8 *)"||") == 0)
+		{
+			u8 **first_cmd, **second_cmd;
+			u8 op_and = (_strcmp(args[x], (u8 *)"&&") == 0);
+			u64 a, b;
+
+			/* Split first and second command */
+			first_cmd = malloc(sizeof(u8 *) * (x + 1));
+			if (!first_cmd)
+				return (shell_free(s));
+
+			for (a = 0; a < x; a++)
+				first_cmd[a] = _strdup(args[a]);
+			first_cmd[a] = NULL;
+
+			second_cmd = &args[x + 1];
+
+			/* Execute first command */
+			s = shell_iter_line(s, first_cmd, line);
+			for (b = 0; first_cmd[b]; b++)
+				free(first_cmd[b]);
+			free(first_cmd);
+
+			/* Decide if second should run */
+			if ((op_and && *(s->exit) == 0) || (!op_and && *(s->exit) != 0))
+				s = shell_iter_line(s, second_cmd, line);
+
+			return (s);
+		}
+	}
+
+	/* Handle external commands via PATH */
 	s->path->extra = args[0];
 	set = set_filter(
 		set_add(
@@ -181,6 +208,7 @@ shell_t *shell_iter_line(shell_t *s, u8 **args, u64 line)
  *
  * Return: shell_t ptr, or NULL if shell should exit
  */
+
 shell_t *shell_iter(shell_t *s)
 {
 	u8 **l;
@@ -188,11 +216,18 @@ shell_t *shell_iter(shell_t *s)
 	u8 *i;
 	u64 x, y;
 	u8 f;
+	char *norm; /* Declare before any code (C90 rule) */
 
 	i = read_line();
 	if (i == 0)
 		return (shell_exit(s, 1));
 
+	/* Normalize logical operators "&&" and "||" even if no spaces exist */
+	norm = normalize_ops((char *)i);
+	free(i);
+	i = (u8 *)norm;
+
+	/* Split the input line by semicolon or newline */
 	l = _strsplit(i, (u8 *)";\n");
 	free(i);
 	if (l == 0)
@@ -201,20 +236,30 @@ shell_t *shell_iter(shell_t *s)
 	f = 0;
 	for (x = 0; l[x]; x++)
 	{
+		/* Split each command by spaces */
 		a = _strsplit(l[x], (u8 *)" ");
 		if (a == 0)
 			continue;
+
+		/* Execute one command */
 		f = (shell_iter_line(s, a, x) == 0);
+
+		/* Free each argument after execution */
 		for (y = 0; a[y]; y++)
 			free(a[y]);
 		free(a);
+
+		/* Stop if shell_iter_line() returns NULL (exit command) */
 		if (f)
 			break;
 	}
+
+	/* Free all commands */
 	for (x = 0; l[x]; x++)
 		free(l[x]);
 	free(l);
 
+	/* Return NULL if shell should exit */
 	if (f)
 		return (0);
 	return (s);
