@@ -1,6 +1,0 @@
-#!/bin/bash
-touch 1
- git add 1
-  git commit -m "added a func"
-git pull
-  git push 
